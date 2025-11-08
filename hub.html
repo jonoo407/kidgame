@@ -16,6 +16,14 @@
             </div>
         </div>
 
+        <div class="stats-banner" id="statsBanner">
+            <div class="stat-item">
+                <span class="stat-icon">🦄</span>
+                <span class="stat-label">Creatures Created:</span>
+                <span class="stat-value" id="creatureCount">0</span>
+            </div>
+        </div>
+
         <div class="activities-grid">
             <div class="activity-card" onclick="goToPage('pages/builder.html')">
                 <div class="activity-icon">🎨</div>
@@ -53,6 +61,7 @@
     <script src="js/storage.js"></script>
     <script>
         const auth = new Auth();
+        const storage = new Storage();
         
         // Check if user is logged in
         const currentUser = auth.getCurrentUser();
@@ -60,6 +69,12 @@
             window.location.href = 'index.html';
         } else {
             document.getElementById('currentUserName').textContent = currentUser;
+            updateStats();
+        }
+
+        function updateStats() {
+            const creatures = storage.getCreatures();
+            document.getElementById('creatureCount').textContent = creatures.length;
         }
 
         function switchUser() {
