@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creature Render Test - Automated</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-result {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #ccc;
+        }
+        .test-result.pass {
+            border-left-color: #4CAF50;
+            background: #f1f8f4;
+        }
+        .test-result.fail {
+            border-left-color: #f44336;
+            background: #fff5f5;
+        }
+        .creature-display {
+            width: 200px;
+            height: 200px;
+            border: 2px solid #ccc;
+            margin: 10px 0;
+            background: #f9f9f9;
+        }
+        h1 { color: #333; }
+        .summary {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Creature Rendering Tests</h1>
+    <div id="testResults"></div>
+    <div class="summary" id="summary"></div>
+
+    <script src="../js/parts.js"></script>
+    <script src="../js/creature.js"></script>
+    <script>
+        const partsManager = new PartsManager();
+        const results = [];
+        let passed = 0;
+        let failed = 0;
+
+        function test(name, fn) {
+            try {
+                const result = fn();
+                if (result === false) {
+                    throw new Error('Test returned false');
+                }
+                results.push({ name, passed: true });
+                passed++;
+            } catch (error) {
+                results.push({ name, passed: false, error: error.message });
+                failed++;
+            }
+        }
+
+        function assert(condition, message) {
+            if (!condition) {
+                throw new Error(message || 'Assertion failed');
+            }
+        }
+
+        // Test 1: PartsManager exists
+        test('PartsManager can be instantiated', () => {
+            const pm = new PartsManager();
+            assert(pm !== null && pm !== undefined, 'PartsManager is null/undefined');
+            return true;
+        });
+
+        // Test 2: Creature exists
+        test('Creature can be instantiated', () => {
+            const c = new Creature();
+            assert(c !== null && c !== undefined, 'Creature is null/undefined');
+            return true;
+        });
+
+        // Test 3: Can get head part
+        test('Can get head part', () => {
+            const head = partsManager.getPart('heads', 'head1');
+            assert(head !== null && head !== undefined, 'Head part not found');
+            assert(head.svg !== null && head.svg !== undefined, 'Head part has no SVG');
+            return true;
+        });
+
+        // Test 4: Can get body part
+        test('Can get body part', () => {
+            const body = partsManager.getPart('bodies', 'body1');
+            assert(body !== null && body !== undefined, 'Body part not found');
+            assert(body.svg !== null && body.svg !== undefined, 'Body part has no SVG');
+            return true;
+        });
+
+        // Test 5: Render creature with head and body
+        test('Render creature with head and body', () => {
+            const creature = new Creature();
+            creature.parts.head = 'head1';
+            creature.parts.body = 'body1';
+            creature.colors.head = '#FF6B6B';
+            creature.colors.body = '#4ECDC4';
+            
+            const svg = creature.render(partsManager);
+            assert(svg !== null && svg !== undefined && svg.length > 0, 'SVG is empty');
+            assert(svg.includes('<svg'), 'SVG does not contain <svg tag');
+            assert(svg.includes('circle'), 'SVG does not contain circle (head)');
+            assert(svg.includes('ellipse'), 'SVG does not contain ellipse (body)');
+            assert(svg.includes('#FF6B6B'), 'SVG does not contain head color');
+            assert(svg.includes('#4ECDC4'), 'SVG does not contain body color');
+            assert(!svg.includes('currentColor'), 'SVG still contains currentColor');
+            
+            // Display the creature
+            const display = document.createElement('div');
+            display.className = 'creature-display';
+            display.innerHTML = svg;
+            document.body.appendChild(display);
+            
+            return true;
+        });
+
+        // Test 6: Parts positioning
+        test('Parts are positioned correctly', () => {
+            const creature = new Creature();
+            creature.parts.head = 'head1';
+            creature.parts.body = 'body1';
+            creature.parts.legs = 'leg1';
+            
+            const svg = creature.render(partsManager);
+            assert(svg.includes('translate(0, 0)'), 'Body transform not found');
+            assert(svg.includes('translate(0, -20)'), 'Head transform not found');
+            assert(svg.includes('translate(0, 25)'), 'Legs transform not found');
+            return true;
+        });
+
+        // Test 7: Empty creature renders valid SVG
+        test('Empty creature renders valid SVG', () => {
+            const creature = new Creature();
+            const svg = creature.render(partsManager);
+            assert(svg.includes('<svg'), 'SVG does not contain <svg tag');
+            assert(svg.includes('viewBox="0 0 100 100"'), 'SVG does not have correct viewBox');
+            return true;
+        });
+
+        // Test 8: Verify head and body both render
+        test('Head and body both render when set', () => {
+            const creature = new Creature();
+            creature.parts.head = 'head1';
+            creature.parts.body = 'body1';
+            
+            const svg = creature.render(partsManager);
+            const circleCount = (svg.match(/<circle/g) || []).length;
+            const ellipseCount = (svg.match(/<ellipse/g) || []).length;
+            
+            assert(circleCount > 0, 'No circles found (head should be a circle)');
+            assert(ellipseCount > 0, 'No ellipses found (body should be an ellipse)');
+            return true;
+        });
+
+        // Render results
+        const resultsDiv = document.getElementById('testResults');
+        results.forEach(result => {
+            const div = document.createElement('div');
+            div.className = `test-result ${result.passed ? 'pass' : 'fail'}`;
+            div.innerHTML = `
+                <strong>${result.passed ? '✅' : '❌'} ${result.name}</strong>
+                ${result.error ? `<br><small>Error: ${result.error}</small>` : ''}
+            `;
+            resultsDiv.appendChild(div);
+        });
+
+        // Summary
+        const summaryDiv = document.getElementById('summary');
+        summaryDiv.innerHTML = `
+            <h2>Test Summary</h2>
+            <p><strong>Total:</strong> ${results.length} tests</p>
+            <p><strong style="color: #4CAF50;">Passed:</strong> ${passed}</p>
+            <p><strong style="color: #f44336;">Failed:</strong> ${failed}</p>
+            <p><strong>Success Rate:</strong> ${((passed / results.length) * 100).toFixed(1)}%</p>
+        `;
+    </script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creature Render Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .creature-display {
+            width: 300px;
+            height: 300px;
+            border: 2px solid #ccc;
+            margin: 20px 0;
+            background: #f9f9f9;
+        }
+        .debug {
+            background: #fff3cd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow: auto;
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Creature Rendering Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Head and Body Only</h2>
+        <div class="creature-display" id="test1"></div>
+        <div class="debug" id="debug1"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: All Parts</h2>
+        <div class="creature-display" id="test2"></div>
+        <div class="debug" id="debug2"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Individual Parts</h2>
+        <h3>Head Only</h3>
+        <div class="creature-display" id="test3-head"></div>
+        <h3>Body Only</h3>
+        <div class="creature-display" id="test3-body"></div>
+        <h3>Arms Only</h3>
+        <div class="creature-display" id="test3-arms"></div>
+        <h3>Legs Only</h3>
+        <div class="creature-display" id="test3-legs"></div>
+    </div>
+
+    <script src="js/parts.js"></script>
+    <script src="js/creature.js"></script>
+    <script>
+        const partsManager = new PartsManager();
+        
+        // Test 1: Head and Body
+        const creature1 = new Creature();
+        creature1.parts.head = 'head1';
+        creature1.parts.body = 'body1';
+        creature1.colors.head = '#FF6B6B';
+        creature1.colors.body = '#4ECDC4';
+        
+        const svg1 = creature1.render(partsManager);
+        document.getElementById('test1').innerHTML = svg1;
+        document.getElementById('debug1').textContent = 'SVG Output:\n' + svg1;
+        
+        // Test 2: All Parts
+        const creature2 = new Creature();
+        creature2.parts.head = 'head1';
+        creature2.parts.body = 'body1';
+        creature2.parts.arms = 'arm1';
+        creature2.parts.legs = 'leg1';
+        creature2.parts.accessory = 'acc1';
+        
+        const svg2 = creature2.render(partsManager);
+        document.getElementById('test2').innerHTML = svg2;
+        document.getElementById('debug2').textContent = 'SVG Output:\n' + svg2;
+        
+        // Test 3: Individual parts
+        const headOnly = new Creature();
+        headOnly.parts.head = 'head1';
+        headOnly.colors.head = '#FF6B6B';
+        document.getElementById('test3-head').innerHTML = headOnly.render(partsManager);
+        
+        const bodyOnly = new Creature();
+        bodyOnly.parts.body = 'body1';
+        bodyOnly.colors.body = '#4ECDC4';
+        document.getElementById('test3-body').innerHTML = bodyOnly.render(partsManager);
+        
+        const armsOnly = new Creature();
+        armsOnly.parts.arms = 'arm1';
+        armsOnly.colors.arms = '#45B7D1';
+        document.getElementById('test3-arms').innerHTML = armsOnly.render(partsManager);
+        
+        const legsOnly = new Creature();
+        legsOnly.parts.legs = 'leg1';
+        legsOnly.colors.legs = '#98D8C8';
+        document.getElementById('test3-legs').innerHTML = legsOnly.render(partsManager);
+        
+        // Debug: Check parts
+        console.log('Head part:', partsManager.getPart('heads', 'head1'));
+        console.log('Body part:', partsManager.getPart('bodies', 'body1'));
+    </script>
+</body>
+</html>
