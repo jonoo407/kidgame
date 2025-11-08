@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Showcase</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .showcase-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .showcase-header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .showcase-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .option-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .option-card:hover {
+            transform: translateY(-5px);
+        }
+        .creatures-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .creature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .creature-preview {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 15px;
+        }
+        .parade-area {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            min-height: 400px;
+            overflow: hidden;
+            position: relative;
+        }
+        .parade-creature {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            animation: parade 10s linear infinite;
+        }
+        @keyframes parade {
+            from { left: -100px; }
+            to { left: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="showcase-container">
+        <div class="showcase-header">
+            <h1>🎪 Showcase</h1>
+            <button class="btn-secondary" onclick="window.location.href='../hub.html'">← Back to Hub</button>
+        </div>
+
+        <div class="showcase-options">
+            <div class="option-card" onclick="showGallery()">
+                <div style="font-size: 3em; margin-bottom: 15px;">🖼️</div>
+                <h2>Gallery</h2>
+                <p>View all your creatures</p>
+            </div>
+            <div class="option-card" onclick="startParade()">
+                <div style="font-size: 3em; margin-bottom: 15px;">🎭</div>
+                <h2>Parade</h2>
+                <p>Watch your creatures march</p>
+            </div>
+        </div>
+
+        <div id="showcaseContent"></div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/storage.js"></script>
+    <script src="../js/parts.js"></script>
+    <script src="../js/creature.js"></script>
+    <script>
+        const auth = new Auth();
+        const storage = new Storage();
+        const partsManager = new PartsManager();
+        
+        if (!auth.getCurrentUser()) {
+            window.location.href = '../index.html';
+        }
+
+        function showGallery() {
+            const creatures = storage.getCreatures();
+            const content = document.getElementById('showcaseContent');
+            
+            if (creatures.length === 0) {
+                content.innerHTML = '<div style="text-align: center; padding: 40px; background: white; border-radius: 20px;"><p>No creatures yet! Create one first!</p></div>';
+                return;
+            }
+
+            content.innerHTML = '<h2 style="margin-bottom: 20px;">Your Creatures</h2><div class="creatures-gallery"></div>';
+            const gallery = content.querySelector('.creatures-gallery');
+
+            creatures.forEach(creature => {
+                const card = document.createElement('div');
+                card.className = 'creature-card';
+                const creatureObj = Creature.fromJSON(creature);
+                card.innerHTML = `
+                    <div class="creature-preview">${creatureObj.render(partsManager)}</div>
+                    <h3>${creatureObj.name}</h3>
+                    <p>Happiness: ${creatureObj.happiness || 50}%</p>
+                `;
+                gallery.appendChild(card);
+            });
+        }
+
+        function startParade() {
+            const creatures = storage.getCreatures();
+            const content = document.getElementById('showcaseContent');
+            
+            if (creatures.length === 0) {
+                content.innerHTML = '<div style="text-align: center; padding: 40px; background: white; border-radius: 20px;"><p>No creatures yet! Create one first!</p></div>';
+                return;
+            }
+
+            content.innerHTML = '<div class="parade-area" id="paradeArea"></div>';
+            const paradeArea = document.getElementById('paradeArea');
+
+            creatures.forEach((creature, index) => {
+                const paradeCreature = document.createElement('div');
+                paradeCreature.className = 'parade-creature';
+                paradeCreature.style.top = (index * 120) % 300 + 'px';
+                paradeCreature.style.animationDelay = (index * 2) + 's';
+                const creatureObj = Creature.fromJSON(creature);
+                paradeCreature.innerHTML = creatureObj.render(partsManager);
+                paradeArea.appendChild(paradeCreature);
+            });
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creature Builder - Welcome!</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-box">
+            <h1>🐾 Creature Builder 🐾</h1>
+            <p class="subtitle">Create amazing creatures and have fun!</p>
+            
+            <div class="login-form">
+                <div class="form-group">
+                    <label for="userSelect">Choose your name:</label>
+                    <select id="userSelect" class="user-select">
+                        <option value="">-- New Player --</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="newUserGroup">
+                    <label for="userName">Or enter a new name:</label>
+                    <input type="text" id="userName" placeholder="Your name" maxlength="20" class="user-input">
+                </div>
+                
+                <button id="startButton" class="btn-primary">Start Playing!</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/storage.js"></script>
+    <script>
+        const auth = new Auth();
+        const userSelect = document.getElementById('userSelect');
+        const userName = document.getElementById('userName');
+        const startButton = document.getElementById('startButton');
+        const newUserGroup = document.getElementById('newUserGroup');
+
+        // Load existing users
+        function loadUsers() {
+            const users = auth.getUsers();
+            userSelect.innerHTML = '<option value="">-- New Player --</option>';
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user;
+                option.textContent = user;
+                userSelect.appendChild(option);
+            });
+        }
+
+        // Handle user selection
+        userSelect.addEventListener('change', function() {
+            if (this.value) {
+                userName.value = this.value;
+                newUserGroup.style.display = 'none';
+            } else {
+                newUserGroup.style.display = 'block';
+                userName.value = '';
+                userName.focus();
+            }
+        });
+
+        // Start playing
+        startButton.addEventListener('click', function() {
+            const name = userName.value.trim();
+            if (!name) {
+                alert('Please enter your name!');
+                userName.focus();
+                return;
+            }
+
+            if (name.length < 2) {
+                alert('Name must be at least 2 characters long!');
+                userName.focus();
+                return;
+            }
+
+            // Login user
+            auth.login(name);
+            
+            // Redirect to hub
+            window.location.href = 'hub.html';
+        });
+
+        // Allow Enter key to submit
+        userName.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startButton.click();
+            }
+        });
+
+        // Load users on page load
+        loadUsers();
+        
+        // Focus on input
+        userName.focus();
+    </script>
+</body>
+</html>
+

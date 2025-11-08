@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creature Builder - Hub</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="hub-container">
+        <div class="hub-header">
+            <h1 class="hub-title">🐾 Creature Builder 🐾</h1>
+            <div class="user-info">
+                <span class="user-name" id="currentUserName">Player</span>
+                <button class="btn-secondary" onclick="switchUser()">Switch User</button>
+            </div>
+        </div>
+
+        <div class="activities-grid">
+            <div class="activity-card" onclick="goToPage('pages/builder.html')">
+                <div class="activity-icon">🎨</div>
+                <h2 class="activity-title">Build Creature</h2>
+                <p class="activity-description">Create your own amazing creature!</p>
+            </div>
+
+            <div class="activity-card" onclick="goToPage('pages/care.html')">
+                <div class="activity-icon">💚</div>
+                <h2 class="activity-title">Take Care</h2>
+                <p class="activity-description">Feed and play with your creatures!</p>
+            </div>
+
+            <div class="activity-card" onclick="goToPage('pages/games.html')">
+                <div class="activity-icon">🎮</div>
+                <h2 class="activity-title">Play Games</h2>
+                <p class="activity-description">Fun mini-games with your creatures!</p>
+            </div>
+
+            <div class="activity-card" onclick="goToPage('pages/adventure.html')">
+                <div class="activity-icon">🗺️</div>
+                <h2 class="activity-title">Adventure</h2>
+                <p class="activity-description">Go on exciting quests!</p>
+            </div>
+
+            <div class="activity-card" onclick="goToPage('pages/showcase.html')">
+                <div class="activity-icon">🎪</div>
+                <h2 class="activity-title">Showcase</h2>
+                <p class="activity-description">See all your creatures!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/storage.js"></script>
+    <script>
+        const auth = new Auth();
+        
+        // Check if user is logged in
+        const currentUser = auth.getCurrentUser();
+        if (!currentUser) {
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('currentUserName').textContent = currentUser;
+        }
+
+        function switchUser() {
+            if (confirm('Switch to a different player?')) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        function goToPage(page) {
+            window.location.href = page;
+        }
+    </script>
+</body>
+</html>
+

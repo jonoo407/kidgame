@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Games</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .games-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .games-header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .game-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+        }
+        .game-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="games-container">
+        <div class="games-header">
+            <h1>🎮 Play Games</h1>
+            <button class="btn-secondary" onclick="window.location.href='../hub.html'">← Back to Hub</button>
+        </div>
+
+        <div class="game-card" onclick="startGame('dance')">
+            <div class="game-icon">💃</div>
+            <h2>Creature Dance-Off</h2>
+            <p>Make your creature dance to the rhythm!</p>
+        </div>
+
+        <div class="game-card" onclick="startGame('memory')">
+            <div class="game-icon">🧠</div>
+            <h2>Memory Match</h2>
+            <p>Match creature parts in this memory game!</p>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        const auth = new Auth();
+        
+        if (!auth.getCurrentUser()) {
+            window.location.href = '../index.html';
+        }
+
+        function startGame(gameType) {
+            if (gameType === 'dance') {
+                alert('Dance game coming soon! 🎉');
+            } else if (gameType === 'memory') {
+                alert('Memory game coming soon! 🎉');
+            }
+        }
+    </script>
+</body>
+</html>
+

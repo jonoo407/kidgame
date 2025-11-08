@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Take Care of Your Creature</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .care-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .care-header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .creature-selector {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .creature-select {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            font-family: inherit;
+        }
+        .care-area {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .creature-display-large {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .happiness-meter {
+            width: 100%;
+            height: 40px;
+            background: #e0e0e0;
+            border-radius: 20px;
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+        }
+        .happiness-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ECDC4, #45B7D1);
+            border-radius: 20px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .care-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .care-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            font-size: 1.2em;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform 0.2s;
+        }
+        .care-button:hover {
+            transform: scale(1.05);
+        }
+        .care-button:active {
+            transform: scale(0.95);
+        }
+        .creature-expression {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="care-container">
+        <div class="care-header">
+            <h1>💚 Take Care of Your Creature</h1>
+            <button class="btn-secondary" onclick="window.location.href='../hub.html'">← Back to Hub</button>
+        </div>
+
+        <div class="creature-selector">
+            <select id="creatureSelect" class="creature-select">
+                <option value="">Select a creature...</option>
+            </select>
+        </div>
+
+        <div class="care-area" id="careArea" style="display: none;">
+            <div class="creature-expression" id="creatureExpression">😊</div>
+            <div class="creature-display-large" id="creatureDisplay"></div>
+            
+            <h2 id="creatureNameDisplay"></h2>
+            
+            <div class="happiness-meter">
+                <div class="happiness-fill" id="happinessFill" style="width: 50%;">
+                    <span id="happinessText">50%</span>
+                </div>
+            </div>
+
+            <div class="care-buttons">
+                <button class="care-button" onclick="feedCreature()">🍎 Feed</button>
+                <button class="care-button" onclick="playWithCreature()">🎾 Play</button>
+                <button class="care-button" onclick="petCreature()">👋 Pet</button>
+                <button class="care-button" onclick="tickleCreature()">😄 Tickle</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/storage.js"></script>
+    <script src="../js/parts.js"></script>
+    <script src="../js/creature.js"></script>
+    <script>
+        const auth = new Auth();
+        const storage = new Storage();
+        const partsManager = new PartsManager();
+        
+        if (!auth.getCurrentUser()) {
+            window.location.href = '../index.html';
+        }
+
+        let currentCreature = null;
+
+        // Load creatures
+        function loadCreatures() {
+            const creatures = storage.getCreatures();
+            const select = document.getElementById('creatureSelect');
+            select.innerHTML = '<option value="">Select a creature...</option>';
+            
+            creatures.forEach(creature => {
+                const option = document.createElement('option');
+                option.value = creature.id;
+                option.textContent = creature.name || 'Unnamed Creature';
+                select.appendChild(option);
+            });
+
+            select.addEventListener('change', function() {
+                if (this.value) {
+                    loadCreature(this.value);
+                } else {
+                    document.getElementById('careArea').style.display = 'none';
+                }
+            });
+        }
+
+        // Load a specific creature
+        function loadCreature(id) {
+            const creatureData = storage.getCreature(id);
+            if (!creatureData) return;
+
+            currentCreature = Creature.fromJSON(creatureData);
+            document.getElementById('careArea').style.display = 'block';
+            document.getElementById('creatureNameDisplay').textContent = currentCreature.name;
+            
+            updateCreatureDisplay();
+            updateHappiness();
+        }
+
+        // Update creature display
+        function updateCreatureDisplay() {
+            const display = document.getElementById('creatureDisplay');
+            display.innerHTML = currentCreature.render(partsManager);
+        }
+
+        // Update happiness meter
+        function updateHappiness() {
+            const happiness = currentCreature.happiness || 50;
+            const fill = document.getElementById('happinessFill');
+            const text = document.getElementById('happinessText');
+            
+            fill.style.width = happiness + '%';
+            text.textContent = happiness + '%';
+            
+            updateExpression(happiness);
+        }
+
+        // Update expression based on happiness
+        function updateExpression(happiness) {
+            const expression = document.getElementById('creatureExpression');
+            if (happiness >= 80) {
+                expression.textContent = '😄';
+            } else if (happiness >= 60) {
+                expression.textContent = '😊';
+            } else if (happiness >= 40) {
+                expression.textContent = '😐';
+            } else if (happiness >= 20) {
+                expression.textContent = '😕';
+            } else {
+                expression.textContent = '😢';
+            }
+        }
+
+        // Feed creature
+        function feedCreature() {
+            if (!currentCreature) return;
+            currentCreature.happiness = Math.min(100, (currentCreature.happiness || 50) + 10);
+            storage.saveCreature(currentCreature);
+            
+            // Track progress
+            const progress = storage.getProgress('care');
+            if (!progress.totalFeeds) progress.totalFeeds = 0;
+            progress.totalFeeds++;
+            storage.updateProgress('care', progress);
+            
+            updateHappiness();
+            showFeedback('Yummy! 🍎');
+        }
+
+        // Play with creature
+        function playWithCreature() {
+            if (!currentCreature) return;
+            currentCreature.happiness = Math.min(100, (currentCreature.happiness || 50) + 15);
+            storage.saveCreature(currentCreature);
+            
+            // Track progress
+            const progress = storage.getProgress('care');
+            if (!progress.totalPlays) progress.totalPlays = 0;
+            progress.totalPlays++;
+            storage.updateProgress('care', progress);
+            
+            updateHappiness();
+            showFeedback('So fun! 🎾');
+        }
+
+        // Pet creature
+        function petCreature() {
+            if (!currentCreature) return;
+            currentCreature.happiness = Math.min(100, (currentCreature.happiness || 50) + 5);
+            storage.saveCreature(currentCreature);
+            updateHappiness();
+            showFeedback('So nice! 👋');
+        }
+
+        // Tickle creature
+        function tickleCreature() {
+            if (!currentCreature) return;
+            currentCreature.happiness = Math.min(100, (currentCreature.happiness || 50) + 8);
+            storage.saveCreature(currentCreature);
+            updateHappiness();
+            showFeedback('Haha! 😄');
+        }
+
+        // Show feedback
+        function showFeedback(message) {
+            const feedback = document.createElement('div');
+            feedback.className = 'feedback-message';
+            feedback.textContent = message;
+            document.body.appendChild(feedback);
+            
+            // Add celebration effect to creature
+            const display = document.getElementById('creatureDisplay');
+            display.classList.add('celebrate');
+            setTimeout(() => {
+                display.classList.remove('celebrate');
+            }, 600);
+            
+            setTimeout(() => {
+                feedback.style.opacity = '0';
+                feedback.style.transition = 'opacity 0.3s';
+                setTimeout(() => feedback.remove(), 300);
+            }, 1500);
+        }
+
+        // Initialize
+        loadCreatures();
+    </script>
+</body>
+</html>
+

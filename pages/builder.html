@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build Your Creature</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .part-item {
+            position: relative;
+        }
+        .part-preview svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="builder-container">
+        <div class="builder-header">
+            <h1>🎨 Build Your Creature</h1>
+            <button class="btn-secondary" onclick="window.location.href='../hub.html'">← Back to Hub</button>
+        </div>
+
+        <div class="builder-content">
+            <div class="parts-palette">
+                <div class="parts-section">
+                    <h3>Heads</h3>
+                    <div class="parts-grid" id="headsGrid"></div>
+                </div>
+                <div class="parts-section">
+                    <h3>Bodies</h3>
+                    <div class="parts-grid" id="bodiesGrid"></div>
+                </div>
+                <div class="parts-section">
+                    <h3>Arms</h3>
+                    <div class="parts-grid" id="armsGrid"></div>
+                </div>
+                <div class="parts-section">
+                    <h3>Legs</h3>
+                    <div class="parts-grid" id="legsGrid"></div>
+                </div>
+                <div class="parts-section">
+                    <h3>Accessories</h3>
+                    <div class="parts-grid" id="accessoriesGrid"></div>
+                </div>
+            </div>
+
+            <div class="creature-canvas">
+                <div class="creature-display" id="creatureDisplay">
+                    <p style="color: #999; font-size: 1.2em;">Drag parts here to build your creature! 🎨</p>
+                </div>
+                <input type="text" class="creature-name-input" id="creatureName" placeholder="Name your creature..." onkeypress="if(event.key==='Enter') saveCreature()">
+                <button class="btn-primary save-button" onclick="saveCreature()">💾 Save Creature</button>
+            </div>
+
+            <div class="creature-controls">
+                <div class="color-picker">
+                    <h3>Colors</h3>
+                    <div class="color-grid" id="colorGrid"></div>
+                </div>
+                <div class="color-picker">
+                    <h3>Selected Part</h3>
+                    <p id="selectedPart">None</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/storage.js"></script>
+    <script src="../js/parts.js"></script>
+    <script src="../js/creature.js"></script>
+    <script src="../js/rewards.js"></script>
+    <script>
+        const partsManager = new PartsManager();
+        const storage = new Storage();
+        let currentCreature = new Creature();
+        let selectedPartType = null;
+        let selectedColor = '#FF6B6B';
+
+        // Check authentication
+        const auth = new Auth();
+        if (!auth.getCurrentUser()) {
+            window.location.href = '../index.html';
+        }
+
+        // Initialize
+        function init() {
+            loadParts();
+            loadColors();
+            updateCreatureDisplay();
+        }
+
+        // Load parts into grids
+        function loadParts() {
+            // Check for new unlocks
+            const rewards = new Rewards(storage);
+            rewards.checkUnlocks();
+            
+            const types = ['heads', 'bodies', 'arms', 'legs', 'accessories'];
+            types.forEach(type => {
+                const grid = document.getElementById(`${type}Grid`);
+                const parts = partsManager.getParts(type);
+                grid.innerHTML = '';
+                
+                parts.forEach(part => {
+                    const isUnlocked = partsManager.isUnlocked(part.id, storage);
+                    const item = document.createElement('div');
+                    item.className = `part-item ${isUnlocked ? '' : 'locked'}`;
+                    item.innerHTML = `
+                        <div class="part-preview">${part.svg}</div>
+                        <div class="part-name">${part.name}</div>
+                    `;
+                    
+                    if (isUnlocked) {
+                        item.addEventListener('click', () => selectPart(type, part.id));
+                        item.draggable = true;
+                        item.addEventListener('dragstart', (e) => {
+                            e.dataTransfer.setData('partType', type);
+                            e.dataTransfer.setData('partId', part.id);
+                        });
+                    }
+                    
+                    grid.appendChild(item);
+                });
+            });
+        }
+
+        // Load color palette
+        function loadColors() {
+            const colors = partsManager.getDefaultColors();
+            const grid = document.getElementById('colorGrid');
+            grid.innerHTML = '';
+            
+            colors.forEach((color, index) => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = color;
+                swatch.dataset.color = color;
+                swatch.addEventListener('click', () => selectColor(color));
+                if (index === 0) {
+                    swatch.classList.add('selected');
+                }
+                grid.appendChild(swatch);
+            });
+        }
+
+        // Select a part
+        function selectPart(type, partId) {
+            currentCreature.parts[type === 'accessories' ? 'accessory' : type] = partId;
+            selectedPartType = type;
+            
+            // Apply current color to the part
+            const colorKey = type === 'accessories' ? 'accessory' : type;
+            if (!currentCreature.colors[colorKey]) {
+                currentCreature.colors[colorKey] = selectedColor;
+            }
+            
+            updateCreatureDisplay();
+            updateSelectedPartDisplay();
+            
+            // Visual feedback
+            const display = document.getElementById('creatureDisplay');
+            display.classList.add('pulse');
+            setTimeout(() => display.classList.remove('pulse'), 500);
+        }
+
+        // Select a color
+        function selectColor(color) {
+            selectedColor = color;
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                swatch.classList.remove('selected');
+                if (swatch.dataset.color === color) {
+                    swatch.classList.add('selected');
+                    swatch.classList.add('pulse');
+                    setTimeout(() => swatch.classList.remove('pulse'), 500);
+                }
+            });
+            
+            if (selectedPartType) {
+                const colorKey = selectedPartType === 'accessories' ? 'accessory' : selectedPartType;
+                currentCreature.colors[colorKey] = color;
+                updateCreatureDisplay();
+                
+                // Visual feedback
+                const display = document.getElementById('creatureDisplay');
+                display.classList.add('pulse');
+                setTimeout(() => display.classList.remove('pulse'), 500);
+            }
+        }
+
+        // Update creature display
+        function updateCreatureDisplay() {
+            const display = document.getElementById('creatureDisplay');
+            display.innerHTML = currentCreature.render(partsManager);
+        }
+
+        // Update selected part display
+        function updateSelectedPartDisplay() {
+            const display = document.getElementById('selectedPart');
+            if (selectedPartType) {
+                const partId = currentCreature.parts[selectedPartType === 'accessories' ? 'accessory' : selectedPartType];
+                if (partId) {
+                    const part = partsManager.findPart(partId);
+                    display.textContent = part ? part.name : 'None';
+                } else {
+                    display.textContent = 'None';
+                }
+            } else {
+                display.textContent = 'None';
+            }
+        }
+
+        // Save creature
+        function saveCreature() {
+            const name = document.getElementById('creatureName').value.trim();
+            if (!name) {
+                showFeedback('Please give your creature a name!');
+                return;
+            }
+
+            currentCreature.name = name;
+            
+            if (storage.saveCreature(currentCreature)) {
+                showFeedback('Creature saved! 🎉');
+                // Reset for new creature
+                setTimeout(() => {
+                    currentCreature = new Creature();
+                    document.getElementById('creatureName').value = '';
+                    selectedPartType = null;
+                    updateCreatureDisplay();
+                    updateSelectedPartDisplay();
+                }, 2000);
+            } else {
+                showFeedback('Error saving creature. Please try again.');
+            }
+        }
+
+        // Show feedback helper
+        function showFeedback(message) {
+            const feedback = document.createElement('div');
+            feedback.className = 'feedback-message';
+            feedback.textContent = message;
+            document.body.appendChild(feedback);
+            
+            setTimeout(() => {
+                feedback.style.opacity = '0';
+                feedback.style.transition = 'opacity 0.3s';
+                setTimeout(() => feedback.remove(), 300);
+            }, 2000);
+        }
+
+        // Drag and drop
+        const creatureDisplay = document.getElementById('creatureDisplay');
+        creatureDisplay.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        creatureDisplay.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const partType = e.dataTransfer.getData('partType');
+            const partId = e.dataTransfer.getData('partId');
+            if (partType && partId) {
+                selectPart(partType, partId);
+            }
+        });
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
+

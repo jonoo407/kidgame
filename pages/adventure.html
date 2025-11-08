@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adventure Mode</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .adventure-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .adventure-header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .story-scene {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .story-text {
+            font-size: 1.3em;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .choices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .choice-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            font-size: 1.1em;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform 0.2s;
+        }
+        .choice-button:hover {
+            transform: scale(1.05);
+        }
+        .creature-selector {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .creature-select {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+    <div class="adventure-container">
+        <div class="adventure-header">
+            <h1>🗺️ Adventure Mode</h1>
+            <button class="btn-secondary" onclick="window.location.href='../hub.html'">← Back to Hub</button>
+        </div>
+
+        <div class="creature-selector">
+            <select id="creatureSelect" class="creature-select">
+                <option value="">Select a creature for adventure...</option>
+            </select>
+        </div>
+
+        <div id="adventureArea" style="display: none;">
+            <div class="story-scene" id="storyScene">
+                <div class="story-text" id="storyText"></div>
+                <div class="choices" id="choices"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/storage.js"></script>
+    <script src="../js/parts.js"></script>
+    <script src="../js/creature.js"></script>
+    <script src="../js/activities/adventure.js"></script>
+    <script>
+        const auth = new Auth();
+        const storage = new Storage();
+        
+        if (!auth.getCurrentUser()) {
+            window.location.href = '../index.html';
+        }
+
+        const adventure = new Adventure();
+        let currentCreature = null;
+
+        // Load creatures
+        function loadCreatures() {
+            const creatures = storage.getCreatures();
+            const select = document.getElementById('creatureSelect');
+            select.innerHTML = '<option value="">Select a creature for adventure...</option>';
+            
+            creatures.forEach(creature => {
+                const option = document.createElement('option');
+                option.value = creature.id;
+                option.textContent = creature.name || 'Unnamed Creature';
+                select.appendChild(option);
+            });
+
+            select.addEventListener('change', function() {
+                if (this.value) {
+                    const creatureData = storage.getCreature(this.value);
+                    if (creatureData) {
+                        currentCreature = Creature.fromJSON(creatureData);
+                        document.getElementById('adventureArea').style.display = 'block';
+                        adventure.startQuest(currentCreature, document.getElementById('storyScene'), storage);
+                    }
+                } else {
+                    document.getElementById('adventureArea').style.display = 'none';
+                }
+            });
+        }
+
+        loadCreatures();
+    </script>
+</body>
+</html>
+
