@@ -26,7 +26,8 @@ class Creature {
     render(partsManager) {
         const svgParts = [];
         
-        // Render in order: body, legs, arms, head, accessory
+        // Render in order: body (back), legs, arms, head, accessory (front)
+        // Body centered vertically
         if (this.parts.body) {
             const part = partsManager.getPart('bodies', this.parts.body);
             if (part) {
@@ -34,13 +35,15 @@ class Creature {
             }
         }
         
+        // Legs at bottom
         if (this.parts.legs) {
             const part = partsManager.getPart('legs', this.parts.legs);
             if (part) {
-                svgParts.push(this.renderPart(part, this.colors.legs, 50, 70));
+                svgParts.push(this.renderPart(part, this.colors.legs, 50, 75));
             }
         }
         
+        // Arms centered (will overlap with body, which is fine)
         if (this.parts.arms) {
             const part = partsManager.getPart('arms', this.parts.arms);
             if (part) {
@@ -48,17 +51,19 @@ class Creature {
             }
         }
         
+        // Head at top
         if (this.parts.head) {
             const part = partsManager.getPart('heads', this.parts.head);
             if (part) {
-                svgParts.push(this.renderPart(part, this.colors.head, 50, 25));
+                svgParts.push(this.renderPart(part, this.colors.head, 50, 30));
             }
         }
         
+        // Accessory at very top
         if (this.parts.accessory) {
             const part = partsManager.getPart('accessories', this.parts.accessory);
             if (part) {
-                svgParts.push(this.renderPart(part, this.colors.accessory, 50, 15));
+                svgParts.push(this.renderPart(part, this.colors.accessory, 50, 20));
             }
         }
 
@@ -69,11 +74,20 @@ class Creature {
     renderPart(part, color, x, y) {
         if (!part || !part.svg) return '';
         
-        // Replace currentColor with actual color
-        let svg = part.svg.replace(/currentColor/g, color);
+        // Extract inner SVG content (remove the outer <svg> tags)
+        let svgContent = part.svg.trim();
+        // Remove the opening <svg> tag and all its attributes
+        svgContent = svgContent.replace(/<svg[^>]*>/i, '');
+        // Remove the closing </svg> tag
+        svgContent = svgContent.replace(/<\/svg>/i, '');
         
-        // Wrap in group with transform
-        return `<g transform="translate(${x - 50}, ${y - 50})">${svg}</g>`;
+        // Replace currentColor with actual color
+        svgContent = svgContent.replace(/currentColor/g, color);
+        
+        // Wrap in group with transform to position correctly
+        // The viewBox is 0-100, so we translate to center the part at (x, y)
+        // Each part is designed to be centered at (50, 50) in its own viewBox
+        return `<g transform="translate(${x - 50}, ${y - 50})">${svgContent}</g>`;
     }
 
     // Get data for saving
