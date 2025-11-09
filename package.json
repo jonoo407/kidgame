@@ -1,0 +1,42 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "A fun, interactive web-based creature builder game designed for kids around 8 years old. Create unique creatures, take care of them, play games, go on adventures, and showcase your creations!",
+  "main": "index.js",
+  "scripts": {
+    "test": "node tests/simple-test.js",
+    "test:verify": "node tests/verify-rendering.js",
+    "test:all": "npm test && npm run test:verify",
+    "test:jest": "jest",
+    "test:watch": "jest --watch"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "js/**/*.js"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonoo407/kidgame.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jonoo407/kidgame/issues"
+  },
+  "homepage": "https://github.com/jonoo407/kidgame#readme",
+  "devDependencies": {
+    "@jest/globals": "^30.2.0",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "jsdom": "^27.1.0"
+  }
+}

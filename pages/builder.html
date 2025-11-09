@@ -148,11 +148,20 @@
 
         // Select a part
         function selectPart(type, partId) {
-            currentCreature.parts[type === 'accessories' ? 'accessory' : type] = partId;
+            // Map part types to creature parts property names
+            const partKeyMap = {
+                'heads': 'head',
+                'bodies': 'body',
+                'arms': 'arms',
+                'legs': 'legs',
+                'accessories': 'accessory'
+            };
+            const partKey = partKeyMap[type] || type;
+            currentCreature.parts[partKey] = partId;
             selectedPartType = type;
             
             // Apply current color to the part
-            const colorKey = type === 'accessories' ? 'accessory' : type;
+            const colorKey = partKey;
             if (!currentCreature.colors[colorKey]) {
                 currentCreature.colors[colorKey] = selectedColor;
             }
@@ -179,7 +188,15 @@
             });
             
             if (selectedPartType) {
-                const colorKey = selectedPartType === 'accessories' ? 'accessory' : selectedPartType;
+                // Map part types to creature parts property names
+                const partKeyMap = {
+                    'heads': 'head',
+                    'bodies': 'body',
+                    'arms': 'arms',
+                    'legs': 'legs',
+                    'accessories': 'accessory'
+                };
+                const colorKey = partKeyMap[selectedPartType] || selectedPartType;
                 currentCreature.colors[colorKey] = color;
                 updateCreatureDisplay();
                 
@@ -200,7 +217,16 @@
         function updateSelectedPartDisplay() {
             const display = document.getElementById('selectedPart');
             if (selectedPartType) {
-                const partId = currentCreature.parts[selectedPartType === 'accessories' ? 'accessory' : selectedPartType];
+                // Map part types to creature parts property names
+                const partKeyMap = {
+                    'heads': 'head',
+                    'bodies': 'body',
+                    'arms': 'arms',
+                    'legs': 'legs',
+                    'accessories': 'accessory'
+                };
+                const partKey = partKeyMap[selectedPartType] || selectedPartType;
+                const partId = currentCreature.parts[partKey];
                 if (partId) {
                     const part = partsManager.findPart(partId);
                     display.textContent = part ? part.name : 'None';

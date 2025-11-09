@@ -72,22 +72,37 @@ class Creature {
 
     // Render a single part with color
     renderPart(part, color, x, y) {
-        if (!part || !part.svg) return '';
+        if (!part || !part.svg) {
+            return '';
+        }
         
         // Extract inner SVG content (remove the outer <svg> tags)
         let svgContent = part.svg.trim();
-        // Remove the opening <svg> tag and all its attributes
-        svgContent = svgContent.replace(/<svg[^>]*>/i, '');
-        // Remove the closing </svg> tag
-        svgContent = svgContent.replace(/<\/svg>/i, '');
         
-        // Replace currentColor with actual color
-        svgContent = svgContent.replace(/currentColor/g, color);
+        // More robust SVG extraction - handle various formats
+        // Remove the opening <svg> tag and all its attributes (including namespace)
+        svgContent = svgContent.replace(/<svg[^>]*>/gi, '');
+        // Remove the closing </svg> tag
+        svgContent = svgContent.replace(/<\/svg>/gi, '');
+        
+        // Trim whitespace
+        svgContent = svgContent.trim();
+        
+        // If we have no content after extraction, return empty
+        if (!svgContent) {
+            return '';
+        }
+        
+        // Replace currentColor with actual color (case-insensitive)
+        svgContent = svgContent.replace(/currentColor/gi, color);
         
         // Wrap in group with transform to position correctly
         // The viewBox is 0-100, so we translate to center the part at (x, y)
         // Each part is designed to be centered at (50, 50) in its own viewBox
-        return `<g transform="translate(${x - 50}, ${y - 50})">${svgContent}</g>`;
+        // We need to translate by (x - 50, y - 50) to move the center from (50, 50) to (x, y)
+        const transformX = x - 50;
+        const transformY = y - 50;
+        return `<g transform="translate(${transformX}, ${transformY})">${svgContent}</g>`;
     }
 
     // Get data for saving
