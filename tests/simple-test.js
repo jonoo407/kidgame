@@ -15,18 +15,38 @@ global.document = {
     querySelectorAll: () => []
 };
 
-// Load and execute the code - use Function constructor to execute in global scope
+// Load and execute the code
 const partsCode = fs.readFileSync(path.join(__dirname, '../js/parts.js'), 'utf8');
 const creatureCode = fs.readFileSync(path.join(__dirname, '../js/creature.js'), 'utf8');
 
-// Execute code - classes will be defined in global scope
-const executeCode = new Function(partsCode + '\n' + creatureCode);
-executeCode();
+// Use vm.runInThisContext to execute in global scope
+const vm = require('vm');
+try {
+    vm.runInThisContext(partsCode);
+    vm.runInThisContext(creatureCode);
+} catch (error) {
+    // Fallback: try eval
+    eval(partsCode);
+    eval(creatureCode);
+}
 
 // Classes should now be available
 if (typeof PartsManager === 'undefined' || typeof Creature === 'undefined') {
     console.error('ERROR: Classes not loaded. PartsManager:', typeof PartsManager, 'Creature:', typeof Creature);
-    process.exit(1);
+    console.error('Trying alternative loading method...');
+    
+    // Alternative: create a context and extract
+    const context = { global, window: {}, document: {} };
+    vm.createContext(context);
+    vm.runInContext(partsCode, context);
+    vm.runInContext(creatureCode, context);
+    
+    if (context.PartsManager) {
+        global.PartsManager = context.PartsManager;
+        global.Creature = context.Creature;
+    } else {
+        process.exit(1);
+    }
 }
 
 // Tests

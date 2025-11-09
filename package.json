@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "node tests/simple-test.js",
+    "test:verify": "node tests/verify-rendering.js",
+    "test:all": "npm test && npm run test:verify",
     "test:jest": "jest",
     "test:watch": "jest --watch"
   },
